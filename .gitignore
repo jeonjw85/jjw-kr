@@ -4,3 +4,7 @@
 !.dev.vars.example
 .env*
 !.env.example
+
+# 작업 문서 (비공개 프로젝트 이름을 포함하므로 커밋하지 않음)
+docs/
+.superpowers/

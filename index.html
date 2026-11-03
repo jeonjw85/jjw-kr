@@ -1,575 +1,1222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jeongwan Jeon</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js">
-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/objects/Sky.js">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-variable-dynamic-subset.min.css">
-<script>
-  window.__pre = {
-    sun: fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&daily=sunrise,sunset&timezone=Asia%2FSeoul&forecast_days=1').then((r) => r.json()).catch(() => null),
-    wx: fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=weather_code,cloud_cover,temperature_2m,precipitation,wind_speed_10m,wind_direction_10m').then((r) => r.json()).catch(() => null),
-  };
-</script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    background: #0a1420;
-    color: #e5e5e5;
-    font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow: hidden;
-  }
-  #bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  }
-  .fade-bottom {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 26vh;
-    z-index: 0;
-    pointer-events: none;
-    background: linear-gradient(to top, rgba(5, 8, 14, 0.4), rgba(5, 8, 14, 0));
-  }
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .container {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    color: #f2f2f2;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
-    transition: color 1.5s;
-  }
-  body.bright-sky .container {
-    color: #14181d;
-    text-shadow: 0 1px 10px rgba(255, 255, 255, 0.35);
-  }
-  .name {
-    font-size: 1.8rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    margin-bottom: 1.6rem;
-  }
-  .email {
-    font-size: 1rem;
-    color: inherit;
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
-    opacity: 0.85;
-    padding-bottom: 2px;
-    transition: opacity 0.2s;
-  }
-  .email:hover {
-    opacity: 1;
-  }
-  /*
-  .bottom-box {
-    position: fixed;
-    left: 50%;
-    bottom: 24px;
-    transform: translateX(-50%);
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.45rem 1.1rem;
-    font-size: 0.78rem;
-    letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.7);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .bottom-box .weather {
-    color: rgba(255, 255, 255, 0.45);
-  }
-  */
-</style>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-</head>
-<body>
-  <canvas id="bg"></canvas>
-  <div class="fade-bottom"></div>
-  <div class="container">
-    <div class="name">Jeongwan Jeon</div>
-    <a class="email" href="mailto:jjw@jjw.kr">jjw@jjw.kr</a>
-  </div>
-  <!--
-  <div class="bottom-box">
-    <span class="clock" id="clock"></span>
-    <span class="weather" id="weather">Seoul</span>
-  </div>
-  -->
-  <script type="module">
-    import * as THREE from 'three';
-    import { Sky } from 'three/addons/objects/Sky.js';
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Jeongwan Jeon</title>
+        <meta name="description" content="Tools by Jeongwan Jeon" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendard-variable-dynamic-subset.min.css"
+        />
+        <style>
+            :root {
+                --bg: #0a0a0a;
+                --text: #e8e8e8;
+                --dim: #9a9a9a;
+                --faint: #7c7c7c;
+                --line: #1f1f1f;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    "Pretendard Variable",
+                    Pretendard,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    sans-serif;
+                line-height: 1.7;
+                letter-spacing: -0.01em;
+                -webkit-font-smoothing: antialiased;
+                word-break: keep-all;
+            }
+            a {
+                color: inherit;
+            }
+            :focus-visible {
+                outline: 2px solid var(--text);
+                outline-offset: 3px;
+            }
+            .sr {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip: rect(0 0 0 0);
+                white-space: nowrap;
+            }
+            .wrap {
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 0 24px;
+            }
+            .skip {
+                position: absolute;
+                left: -9999px;
+                top: 0;
+                background: var(--text);
+                color: var(--bg);
+                padding: 10px 16px;
+            }
+            .skip:focus {
+                left: 16px;
+                top: 16px;
+            }
 
-    const canvas = document.getElementById('bg');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            header {
+                padding: 26px 0;
+            }
+            header .wrap {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 16px;
+            }
+            .mark {
+                font-weight: 600;
+                letter-spacing: 0.06em;
+                font-size: 0.8rem;
+                text-decoration: none;
+            }
+            nav {
+                display: flex;
+                gap: 18px;
+                align-items: baseline;
+            }
+            nav a,
+            .lang {
+                color: var(--faint);
+                font-size: 0.8rem;
+                text-decoration: none;
+                background: none;
+                border: none;
+                font-family: inherit;
+                cursor: pointer;
+                padding: 0;
+                transition: color 0.15s;
+            }
+            nav a:hover,
+            .lang:hover {
+                color: var(--text);
+            }
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(55, 1, 1, 20000);
-    camera.position.set(0, 18, 80);
+            .hero {
+                padding: 48px 0 56px;
+                text-align: center;
+            }
+            .hero h1 {
+                font-size: 2.1rem;
+                font-weight: 600;
+                letter-spacing: -0.03em;
+                line-height: 1.25;
+            }
+            .links {
+                margin-top: 22px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 20px;
+                justify-content: center;
+            }
+            .links a {
+                color: var(--dim);
+                font-size: 0.85rem;
+                text-decoration: none;
+                transition: color 0.15s;
+            }
+            .links a:hover {
+                color: var(--text);
+            }
 
-    const sun = new THREE.Vector3();
+            section {
+                padding: 34px 0 4px;
+            }
+            .sec-head {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--line);
+            }
+            .sec-head h2 {
+                font-size: 0.85rem;
+                font-weight: 500;
+                color: var(--dim);
+            }
+            .sec-head span {
+                font-size: 0.75rem;
+                color: var(--faint);
+                font-variant-numeric: tabular-nums;
+            }
 
-    const sky = new Sky();
-    sky.scale.setScalar(10000);
-    scene.add(sky);
-    const skyU = sky.material.uniforms;
-    skyU['mieDirectionalG'].value = 0.85;
+            .year {
+                padding-top: 22px;
+            }
+            .year h3 {
+                font-size: 0.75rem;
+                font-weight: 500;
+                color: var(--faint);
+                font-variant-numeric: tabular-nums;
+                padding-bottom: 6px;
+            }
+            .proj-list {
+                list-style: none;
+            }
+            .proj {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-areas: "name lang" "desc lang";
+                gap: 1px 12px;
+                align-items: baseline;
+                padding: 4px 0;
+                font-size: 0.875rem;
+            }
+            .proj-name {
+                grid-area: name;
+                color: var(--dim);
+                text-decoration: none;
+                overflow-wrap: anywhere;
+                transition: color 0.12s;
+            }
+            a.proj-name:hover {
+                color: var(--text);
+            }
+            .proj.is-private .proj-name {
+                color: var(--faint);
+            }
+            .proj-desc {
+                grid-area: desc;
+                color: var(--faint);
+                font-size: 0.78rem;
+                line-height: 1.5;
+                margin-top: 1px;
+            }
+            .proj-desc:empty {
+                display: none;
+            }
+            .proj-lang {
+                grid-area: lang;
+                align-self: start;
+                color: var(--faint);
+                font-size: 0.72rem;
+                white-space: nowrap;
+                min-width: 5.4em;
+                text-align: right;
+            }
 
-    const cloudMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uCloud: { value: 0 },
-        uWind: { value: 0 },
-        uColor: { value: new THREE.Color(0xffffff) },
-        uOpacity: { value: 1 },
-        uSunUvY: { value: 2 },
-        uSunGlow: { value: 0 },
-        uDusk: { value: 0 },
-      },
-      transparent: true,
-      depthWrite: false,
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }`,
-      fragmentShader: `
-        uniform float uTime;
-        uniform float uCloud;
-        uniform float uWind;
-        uniform vec3 uColor;
-        uniform float uOpacity;
-        uniform float uSunUvY;
-        uniform float uSunGlow;
-        uniform float uDusk;
-        varying vec2 vUv;
-        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float noise(vec2 p){
-          vec2 i = floor(p), f = fract(p);
-          f = f*f*(3.0-2.0*f);
-          return mix(mix(hash(i), hash(i+vec2(1,0)), f.x),
-                     mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
-        }
-        float fbm(vec2 p){
-          float v = 0.0, a = 0.5;
-          for (int i = 0; i < 5; i++) { v += a * noise(p); p = p * 2.03 + 11.7; a *= 0.5; }
-          return v;
-        }
-        void main() {
-          vec2 uv = vUv;
-          float drift = uTime * (0.004 + uWind * 0.012);
-          vec2 p = vec2(uv.x * 7.0 + drift, uv.y * 2.6);
-          float f = fbm(p + fbm(p * 1.7 - drift * 0.6) * 0.9);
-          float cover = mix(0.72, 0.22, uCloud) + uDusk * 0.1;
-          float shape = smoothstep(cover, cover + 0.3, f);
-          float fadeTop = smoothstep(1.0, 0.55, uv.y);
-          float fadeBot = smoothstep(0.0, 0.30, uv.y);
-          float a = shape * fadeTop * fadeBot * uOpacity;
-          vec2 dw = (uv - vec2(0.5, uSunUvY)) * vec2(16000.0, 3000.0);
-          float dist = length(dw);
-          float hole = smoothstep(120.0, 700.0, dist);
-          a *= mix(0.06, 1.0, hole);
-          float glowAmt = (1.0 - smoothstep(0.0, 1000.0, dist)) * uSunGlow;
-          vec3 col = mix(uColor, vec3(1.0, 0.72, 0.42), clamp(glowAmt, 0.0, 1.0) * 0.6);
-          a = max(a, glowAmt * 0.45);
-          float hk = mix(3.2, 5.5, step(0.42, uv.y));
-          float band = exp(-pow((uv.y - 0.42) * hk, 2.0)) * min(uDusk * 1.6, 1.0);
-          col = mix(col, vec3(1.0, 0.36, 0.18), clamp(band, 0.0, 1.0) * 0.6);
-          a = max(a, band * 0.42);
-          gl_FragColor = vec4(col, a);
-        }`
-    });
-    const clouds = new THREE.Mesh(new THREE.PlaneGeometry(16000, 3000), cloudMat);
-    clouds.position.set(0, 260, -3500);
-    scene.add(clouds);
+            .archive {
+                list-style: none;
+            }
+            .archive li {
+                display: grid;
+                grid-template-columns: 132px 1fr;
+                gap: 4px 20px;
+                padding: 14px 0;
+                border-bottom: 1px solid var(--line);
+            }
+            .archive li:last-child {
+                border-bottom: none;
+            }
+            .entry-when {
+                color: var(--faint);
+                font-size: 0.75rem;
+                font-variant-numeric: tabular-nums;
+                padding-top: 3px;
+            }
+            .entry-name {
+                font-size: 0.92rem;
+            }
+            .entry-desc {
+                grid-column: 2;
+                color: var(--faint);
+                font-size: 0.82rem;
+                line-height: 1.55;
+                margin-top: -2px;
+            }
 
-    const glowMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uDusk: { value: 0 },
-      },
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }`,
-      fragmentShader: `
-        uniform float uDusk;
-        varying vec2 vUv;
-        void main() {
-          vec2 uv = vUv;
-          float horiz = exp(-pow((uv.y - 0.42) * 3.2, 2.0));
-          float sunward = exp(-pow((uv.x - 0.5) * 1.9, 2.0));
-          float g = horiz * mix(0.4, 1.0, sunward);
-          vec3 warm = mix(vec3(1.0, 0.22, 0.08), vec3(1.0, 0.6, 0.28), clamp((uv.y - 0.42) * 3.0 + 0.3, 0.0, 1.0));
-          float a = g * uDusk * 0.62;
-          gl_FragColor = vec4(warm, a);
-        }`
-    });
-    const glow = new THREE.Mesh(new THREE.PlaneGeometry(20000, 4200), glowMat);
-    glow.position.set(0, 260, -3800);
-    scene.add(glow);
+            footer {
+                padding: 48px 0 64px;
+                margin-top: 32px;
+                border-top: 1px solid var(--line);
+            }
+            footer .wrap {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px 20px;
+                justify-content: space-between;
+            }
+            footer,
+            footer a {
+                color: var(--faint);
+                font-size: 0.78rem;
+                text-decoration: none;
+            }
+            footer a:hover {
+                color: var(--text);
+            }
 
-    const starGeo = new THREE.BufferGeometry();
-    const N = 2500;
-    const sPos = new Float32Array(N * 3);
-    const sSize = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      const th = Math.random() * Math.PI * 2;
-      const ph = Math.acos(Math.random());
-      const r = 8000;
-      sPos[i*3] = r * Math.sin(ph) * Math.cos(th);
-      sPos[i*3+1] = r * Math.cos(ph);
-      sPos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
-      sSize[i] = 0.8 + Math.pow(Math.random(), 2.5) * 2.4;
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-    starGeo.setAttribute('aSize', new THREE.BufferAttribute(sSize, 1));
-    const starMat = new THREE.ShaderMaterial({
-      uniforms: { uOpacity: { value: 0 }, uTime: { value: 0 }, uPR: { value: 1 } },
-      transparent: true,
-      depthWrite: false,
-      vertexShader: `
-        attribute float aSize;
-        uniform float uTime;
-        uniform float uPR;
-        varying float vTw;
-        void main() {
-          vTw = 0.7 + 0.3 * sin(uTime * 1.5 + position.x * 0.01);
-          gl_PointSize = aSize * uPR;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }`,
-      fragmentShader: `
-        uniform float uOpacity;
-        varying float vTw;
-        void main() {
-          float d = length(gl_PointCoord - 0.5);
-          float a = smoothstep(0.5, 0.1, d);
-          gl_FragColor = vec4(1.0, 1.0, 1.0, a * uOpacity * vTw);
-        }`
-    });
-    const stars = new THREE.Points(starGeo, starMat);
-    scene.add(stars);
-    starMat.uniforms.uPR.value = renderer.getPixelRatio();
+            @media (max-width: 560px) {
+                .hero {
+                    padding: 24px 0 40px;
+                }
+                .hero h1 {
+                    font-size: 1.75rem;
+                }
+                nav {
+                    gap: 14px;
+                }
+                nav a {
+                    display: none;
+                }
+                .archive li {
+                    grid-template-columns: 1fr;
+                    gap: 2px;
+                }
+                .entry-desc {
+                    grid-column: 1;
+                }
+                .proj-lang {
+                    min-width: 4.6em;
+                }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    transition: none !important;
+                }
+                html {
+                    scroll-behavior: auto;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a
+            class="skip"
+            href="#projects"
+            data-ko="본문으로 건너뛰기"
+            data-en="Skip to content"
+            >Skip to content</a
+        >
 
-    const RAIN_N = 2400;
-    const rainGeo = new THREE.BufferGeometry();
-    const rPos = new Float32Array(RAIN_N * 2 * 3);
-    const rSeed = new Float32Array(RAIN_N * 2);
-    const rEnd = new Float32Array(RAIN_N * 2);
-    for (let i = 0; i < RAIN_N; i++) {
-      const x = (Math.random() - 0.5) * 320;
-      const y = Math.random() * 90;
-      const z = -240 + Math.random() * 340;
-      const seed = Math.random();
-      for (let e = 0; e < 2; e++) {
-        const v = i * 2 + e;
-        rPos[v*3] = x; rPos[v*3+1] = y; rPos[v*3+2] = z;
-        rSeed[v] = seed; rEnd[v] = e;
-      }
-    }
-    rainGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
-    rainGeo.setAttribute('aSeed', new THREE.BufferAttribute(rSeed, 1));
-    rainGeo.setAttribute('aEnd', new THREE.BufferAttribute(rEnd, 1));
-    const rainMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uOpacity: { value: 0 },
-        uWind: { value: 0 },
-        uSpeed: { value: 1 },
-      },
-      transparent: true,
-      depthWrite: false,
-      vertexShader: `
-        uniform float uTime;
-        uniform float uWind;
-        uniform float uSpeed;
-        attribute float aSeed;
-        attribute float aEnd;
-        void main() {
-          vec3 p = position;
-          float speed = (42.0 + aSeed * 30.0) * uSpeed;
-          float y = mod(position.y - uTime * speed, 90.0);
-          p.y = y - aEnd * 2.4;
-          p.x += (90.0 - y) * uWind - aEnd * 2.4 * uWind;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-        }`,
-      fragmentShader: `
-        uniform float uOpacity;
-        void main() {
-          gl_FragColor = vec4(0.72, 0.8, 0.9, uOpacity);
-        }`
-    });
-    const rain = new THREE.LineSegments(rainGeo, rainMat);
-    scene.add(rain);
+        <header>
+            <div class="wrap">
+                <a class="mark" href="/">JJW</a>
+                <nav id="main-nav" aria-label="Main">
+                    <a
+                        href="#projects"
+                        data-ko="깃허브 프로젝트"
+                        data-en="GitHub Projects"
+                        >GitHub Projects</a
+                    >
+                    <a href="#archive" data-ko="아카이브" data-en="Archive"
+                        >Archive</a
+                    >
+                    <button
+                        class="lang"
+                        type="button"
+                        id="lang"
+                        aria-pressed="false"
+                        aria-label="KO / EN, 한국어로 전환"
+                    >
+                        EN
+                    </button>
+                </nav>
+            </div>
+        </header>
 
-    const SNOW_N = 1800;
-    const snowGeo = new THREE.BufferGeometry();
-    const snPos = new Float32Array(SNOW_N * 3);
-    const snSeed = new Float32Array(SNOW_N);
-    for (let i = 0; i < SNOW_N; i++) {
-      snPos[i*3] = (Math.random() - 0.5) * 320;
-      snPos[i*3+1] = Math.random() * 90;
-      snPos[i*3+2] = -240 + Math.random() * 340;
-      snSeed[i] = Math.random();
-    }
-    snowGeo.setAttribute('position', new THREE.BufferAttribute(snPos, 3));
-    snowGeo.setAttribute('aSeed', new THREE.BufferAttribute(snSeed, 1));
-    const snowMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uOpacity: { value: 0 },
-        uWind: { value: 0 },
-      },
-      transparent: true,
-      depthWrite: false,
-      vertexShader: `
-        uniform float uTime;
-        uniform float uWind;
-        attribute float aSeed;
-        void main() {
-          vec3 p = position;
-          p.y = mod(position.y - uTime * (2.6 + aSeed * 3.0), 90.0);
-          p.x += sin(uTime * (0.4 + aSeed * 0.6) + aSeed * 40.0) * 2.4
-               + uTime * uWind * (6.0 + aSeed * 5.0);
-          p.x = mod(p.x + 160.0, 320.0) - 160.0;
-          vec4 mv = modelViewMatrix * vec4(p, 1.0);
-          gl_PointSize = (2.2 + aSeed * 3.2) * (60.0 / -mv.z);
-          gl_Position = projectionMatrix * mv;
-        }`,
-      fragmentShader: `
-        uniform float uOpacity;
-        void main() {
-          float d = length(gl_PointCoord - 0.5);
-          float a = smoothstep(0.5, 0.05, d);
-          gl_FragColor = vec4(0.95, 0.97, 1.0, a * uOpacity);
-        }`
-    });
-    const snow = new THREE.Points(snowGeo, snowMat);
-    scene.add(snow);
+        <main>
+            <section class="hero">
+                <div class="wrap">
+                    <h1 data-ko="전정완" data-en="Jeongwan Jeon">Jeongwan Jeon</h1>
+                    <div class="links">
+                        <a href="mailto:jjw@jjw.kr">jjw@jjw.kr</a>
+                        <a
+                            href="https://github.com/jeonjw85"
+                            target="_blank"
+                            rel="noopener"
+                            >github.com/jeonjw85</a
+                        >
+                    </div>
+                </div>
+            </section>
 
-    const cloudDay = new THREE.Color(0xf2f4f7);
-    const cloudDusk = new THREE.Color(0xffc79b);
-    const cloudNight = new THREE.Color(0x0e1219);
-    const cloudGray = new THREE.Color(0x8a93a0);
-    const cloudStorm = new THREE.Color(0x39414b);
+            <section id="projects" aria-labelledby="projects-h">
+                <div class="wrap">
+                    <div class="sec-head">
+                        <h2
+                            id="projects-h"
+                            data-ko="깃허브 프로젝트"
+                            data-en="GitHub Projects"
+                        >GitHub Projects</h2>
+                        <span data-ko="59개" data-en="59 repos">59 repos</span>
+                    </div>
+                    <div class="year">
+                        <h3>2026</h3>
+                        <ul class="proj-list">
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/Affiliate-Studio"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Affiliate-Studio</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="제휴 콘텐츠 작성과 WordPress 예약 발행을 관리하는 로컬 서비스"
+                                    data-en="Local service for writing affiliate content and scheduling WordPress posts"
+                                    >Local service for writing affiliate content and scheduling WordPress posts</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/AIJ"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >AIJ</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="LLM 엔드포인트의 탈옥 저항성을 검사하는 비동기 스캐너"
+                                    data-en="Async scanner for jailbreak resistance in LLM endpoints"
+                                    >Async scanner for jailbreak resistance in LLM endpoints</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >ARTEX-ko<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="ARTEX 오픈소스 도구의 한국어화"
+                                    data-en="Korean localisation of the open-source ARTEX tool"
+                                    >Korean localisation of the open-source ARTEX tool</span
+                                ><span class="proj-lang">Go</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/AutoShorts"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >AutoShorts</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Apple Silicon에서 한국어 유튜브 쇼츠를 만드는 로컬 도구"
+                                    data-en="Make Korean YouTube Shorts locally on Apple Silicon, from the CLI or Telegram"
+                                    >Make Korean YouTube Shorts locally on Apple Silicon, from the CLI or Telegram</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >G...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="메뉴 막대에서 쓰는 SwiftUI 기반 macOS GitHub 클라이언트"
+                                    data-en="macOS GitHub client in SwiftUI that lives in the menu bar"
+                                    >macOS GitHub client in SwiftUI that lives in the menu bar</span
+                                ><span class="proj-lang">Swift</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/gitchess"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >gitchess</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="GitHub 이슈로 대국하는 체스"
+                                    data-en="Play chess together through GitHub Issues"
+                                    >Play chess together through GitHub Issues</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/hermes-mail-notifier"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >hermes-mail-notifier</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="중요한 새 메일을 요약해 주는 Hermes Agent 플러그인"
+                                    data-en="Hermes Agent plugin that summarizes important new emails"
+                                    >Hermes Agent plugin that summarizes important new emails</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/learn-elixir-with-algorithm"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >learn-elixir-with-algorithm</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="알고리즘으로 익히는 Elixir 기초"
+                                    data-en="Learning Elixir basics through algorithms"
+                                    >Learning Elixir basics through algorithms</span
+                                ><span class="proj-lang">Elixir</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >n...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="공연 회차를 설정하고 인접석을 계획하는 티켓 명령줄 도구"
+                                    data-en="Command-line tool for planning performance seat allocations"
+                                    >Command-line tool for planning performance seat allocations</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/rapid-photo-web"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >rapid-photo-web</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Rapid Photo Downloader를 브라우저에서 쓰는 컨테이너"
+                                    data-en="Rapid Photo Downloader in your browser, packaged as a single-app container"
+                                    >Rapid Photo Downloader in your browser, packaged as a single-app container</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/refpin"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >refpin</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="소스 위치를 JSON 앵커로 저장하고 파일 변경 후에도 찾아내는 라이브러리"
+                                    data-en="Library for storing source ranges as JSON anchors and locating them after edits"
+                                    >Library for storing source ranges as JSON anchors and locating them after edits</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >S...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="크론, 백업, 배치 작업이 제대로 도는지 감시하는 셀프호스팅 툴"
+                                    data-en="Self-hosted monitor for cron jobs, backups, and batch tasks"
+                                    >Self-hosted monitor for cron jobs, backups, and batch tasks</span
+                                ><span class="proj-lang">Go</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >T...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="미국 주식 신호를 모아 모의매매까지 실행하는 개인용 관제실"
+                                    data-en="Personal dashboard for US stock signals with paper trading"
+                                    >Personal dashboard for US stock signals with paper trading</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/AgentDock"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >AgentDock</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="여러 AI 코딩 에이전트를 격리된 워크트리에서 실행하는 런타임"
+                                    data-en="Runtime for orchestrating AI coding agents across isolated worktrees"
+                                    >Runtime for orchestrating AI coding agents across isolated worktrees</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/CannyGit"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >CannyGit</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="macOS에서 저장소와 워크트리를 한곳에서 관리하는 앱"
+                                    data-en="macOS app for managing Git repositories and worktrees in one place"
+                                    >macOS app for managing Git repositories and worktrees in one place</span
+                                ><span class="proj-lang">Swift</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/DockSnap"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >DockSnap</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Docker Compose 볼륨을 빠르게 저장하고 복원하는 도구"
+                                    data-en="Fast save and restore for Docker Compose development volumes"
+                                    >Fast save and restore for Docker Compose development volumes</span
+                                ><span class="proj-lang">Go</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >i...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="앱 내부 트래픽을 sing-box SOCKS5로 터널링하는 Electron 클라이언트"
+                                    data-en="Electron client that tunnels app traffic through a sing-box SOCKS5 proxy"
+                                    >Electron client that tunnels app traffic through a sing-box SOCKS5 proxy</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/kenfold"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >kenfold</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="AI 에이전트가 기억을 공유하는 셀프호스팅 MCP 서버"
+                                    data-en="Self-hosted memory server that lets AI agents share context over MCP"
+                                    >Self-hosted memory server that lets AI agents share context over MCP</span
+                                ><span class="proj-lang">Go</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/MacSloth"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >MacSloth</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Apple Silicon에서 LoRA 파인튜닝을 돌리는 도구"
+                                    data-en="LoRA fine-tuning on Apple Silicon with MLX"
+                                    >LoRA fine-tuning on Apple Silicon with MLX</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >m...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="모바일프로그래밍 과목 실습"
+                                    data-en="Coursework for a mobile programming class"
+                                    >Coursework for a mobile programming class</span
+                                ><span class="proj-lang">Kotlin</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >m...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="파일 공유와 개발자 유틸을 넣은 Next.js 개인 서버"
+                                    data-en="Next.js personal server with file sharing and developer utilities"
+                                    >Next.js personal server with file sharing and developer utilities</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >o...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="개인 노트와 학습 기록을 모은 Obsidian 보관소"
+                                    data-en="Obsidian vault of personal notes and study records"
+                                    >Obsidian vault of personal notes and study records</span
+                                ><span class="proj-lang"></span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >s...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="좋아하는 노래로 일본어와 영어를 배우는 학습 웹앱"
+                                    data-en="Learn Japanese and English through songs you already like"
+                                    >Learn Japanese and English through songs you already like</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/ytlr"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >ytlr</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="고성능 녹화를 목표로 만든 YouTube 라이브 스트림 기록 도구"
+                                    data-en="YouTube Live Stream recorder and archivist built for high-performance recording"
+                                    >YouTube Live Stream recorder and archivist built for high-performance recording</span
+                                ><span class="proj-lang">Rust</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/2FAC"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >2FAC</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="비밀 키가 기기를 떠나지 않는 로컬 우선 2FA 인증기"
+                                    data-en="Local-first 2FA authenticator. Secrets never leave the machine"
+                                    >Local-first 2FA authenticator. Secrets never leave the machine</span
+                                ><span class="proj-lang">Rust</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/e2ee-kit"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >e2ee-kit</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="X25519 세션과 ChaCha20-Poly1305로 메시지를 암호화하는 킷"
+                                    data-en="End-to-end encryption with X25519 sessions and ChaCha20-Poly1305 messages"
+                                    >End-to-end encryption with X25519 sessions and ChaCha20-Poly1305 messages</span
+                                ><span class="proj-lang">Rust</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >g...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Astro로 다시 만든 구로CC 사이트"
+                                    data-en="The gurocc site rebuilt with Astro"
+                                    >The gurocc site rebuilt with Astro</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/hf2mlx"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >hf2mlx</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Hugging Face 모델을 Apple Silicon용 MLX로 변환하는 도구"
+                                    data-en="Convert Hugging Face models to MLX for Apple Silicon"
+                                    >Convert Hugging Face models to MLX for Apple Silicon</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/homebrew-tap"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >homebrew-tap</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="profNote를 설치하는 Homebrew tap"
+                                    data-en="Homebrew tap for installing profNote"
+                                    >Homebrew tap for installing profNote</span
+                                ><span class="proj-lang">Shell</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >j...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="GitHub 기여 그래프를 채우기 위한 커밋 생성 실험"
+                                    data-en="An experiment at generating commits to fill the contribution graph"
+                                    >An experiment at generating commits to fill the contribution graph</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/Ksecret"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Ksecret</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="고유식별정보와 서비스 키를 찾는 한국 맞춤 시크릿 스캐너"
+                                    data-en="Korean-tuned secret scanner for resident IDs and service keys"
+                                    >Korean-tuned secret scanner for resident IDs and service keys</span
+                                ><span class="proj-lang">Go</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >Paper<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="PDF와 사진을 기기 안에서만 다루는 Android 문서 앱"
+                                    data-en="Android document app that keeps PDFs and photos on the device"
+                                    >Android document app that keeps PDFs and photos on the device</span
+                                ><span class="proj-lang">Kotlin</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/profNote"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >profNote</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="강의 녹음을 마크다운 노트로 바꾸는 데스크톱 앱"
+                                    data-en="Desktop app that turns lecture recordings into Markdown notes"
+                                    >Desktop app that turns lecture recordings into Markdown notes</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >t...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="작업 로그를 JSONL로 쌓아두는 저장소"
+                                    data-en="Repository that accumulates work logs as JSONL records"
+                                    >Repository that accumulates work logs as JSONL records</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >d...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="개인 서비스 링크와 작은 도구를 모은 인트라넷"
+                                    data-en="Personal intranet that collects service links and small browser tools"
+                                    >Personal intranet that collects service links and small browser tools</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >i...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="카메라 기능을 다루는 Android 앱"
+                                    data-en="An Android app that works with the device camera"
+                                    >An Android app that works with the device camera</span
+                                ><span class="proj-lang">Kotlin</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >M...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="모듈로 나눈 텔레그램 개인 비서 봇"
+                                    data-en="Modular Telegram personal assistant bot"
+                                    >Modular Telegram personal assistant bot</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/Radar"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Radar</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="같은 네트워크의 기기를 찾아 페어링하고 파일을 주고받는 Android 앱"
+                                    data-en="Android app that finds nearby devices, pairs with them, and transfers files"
+                                    >Android app that finds nearby devices, pairs with them, and transfers files</span
+                                ><span class="proj-lang">Kotlin</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/2FA-Authenticator-Desktop"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >2FA-Authenticator-Desktop</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Windows에서 로컬로 2FA 코드를 관리하는 WinUI 데스크톱 앱"
+                                    data-en="WinUI desktop authenticator that keeps 2FA codes on Windows"
+                                    >WinUI desktop authenticator that keeps 2FA codes on Windows</span
+                                ><span class="proj-lang">C#</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/arduino-smartFarm"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >arduino-smartFarm</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="토양 수분과 조도를 재고 펌프를 제어하는 Arduino 스마트 팜"
+                                    data-en="Arduino smart farm with soil moisture sensing, light sensing, and pump control"
+                                    >Arduino smart farm with soil moisture sensing, light sensing, and pump control</span
+                                ><span class="proj-lang">C++</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/my"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >my</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="파일 공유와 팀 채널을 넣은 Next.js 기반 개인 서버"
+                                    data-en="Next.js personal server with file sharing, team channels, and utilities"
+                                    >Next.js personal server with file sharing, team channels, and utilities</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/PySniff"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >PySniff</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="프로토콜과 프로세스별 대역폭을 보여주는 네트워크 감시 도구"
+                                    data-en="Captures live packets and shows which protocols and processes use bandwidth"
+                                    >Captures live packets and shows which protocols and processes use bandwidth</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/SPP-link-app"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >SPP-link-app</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Bluetooth SPP로 장치와 통신하는 Android 앱"
+                                    data-en="Android app for connecting and talking to devices over Bluetooth SPP"
+                                    >Android app for connecting and talking to devices over Bluetooth SPP</span
+                                ><span class="proj-lang">Kotlin</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >w...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="공공데이터 API로 내일의 여행지를 추천하는 미니 프로젝트"
+                                    data-en="Small project that recommends tomorrow's destination from public data APIs"
+                                    >Small project that recommends tomorrow's destination from public data APIs</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/youtube-music-tunnel"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >youtube-music-tunnel</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="앱 안에서 SOCKS5로 우회하는 YouTube Music 데스크톱 클라이언트"
+                                    data-en="YouTube Music desktop client with app-local SOCKS5 tunneling"
+                                    >YouTube Music desktop client with app-local SOCKS5 tunneling</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/pro-neighbor"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >pro-neighbor</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="웹프런트엔드 과제로 만든 이웃 서비스"
+                                    data-en="A neighbourhood service built as a web front-end assignment"
+                                    >A neighbourhood service built as a web front-end assignment</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/grassMaker"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >grassMaker</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="커밋을 생성해 GitHub 잔디를 채우는 CLI"
+                                    data-en="CLI that fills your GitHub contribution graph by generating commits"
+                                    >CLI that fills your GitHub contribution graph by generating commits</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >g...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Next.js로 만든 개인 웹 프로젝트"
+                                    data-en="A personal web project built with Next.js"
+                                    >A personal web project built with Next.js</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >u...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Next.js로 만든 개발 유틸 모음"
+                                    data-en="Collection of developer utilities built with Next.js"
+                                    >Collection of developer utilities built with Next.js</span
+                                ><span class="proj-lang">TypeScript</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="year">
+                        <h3>2025</h3>
+                        <ul class="proj-list">
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >D...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="일기와 긴 글에 집중한 소셜 다이어리"
+                                    data-en="Social diary platform focused on journals and long-form writing"
+                                    >Social diary platform focused on journals and long-form writing</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >c...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="흡연 입문자를 위한 담배 추천과 기본 정보 안내"
+                                    data-en="Cigarette recommendations and basic guidance for people new to smoking"
+                                    >Cigarette recommendations and basic guidance for people new to smoking</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >j...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="Next.js로 만들었던 이전 버전의 개인 사이트"
+                                    data-en="The earlier version of this site, built with Next.js"
+                                    >The earlier version of this site, built with Next.js</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >m...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="개발자를 위한 온라인 도구 모음"
+                                    data-en="A collection of small online tools for developers"
+                                    >A collection of small online tools for developers</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="year">
+                        <h3>2023</h3>
+                        <ul class="proj-list">
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >i...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="레츠코레일에서 평내호평-용산 ITX를 자동 예매하는 매크로"
+                                    data-en="Automates ITX ticket booking between Pyeongnae-Hopyeong and Yongsan"
+                                    >Automates ITX ticket booking between Pyeongnae-Hopyeong and Yongsan</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >j...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="우아한테크코스 6기 프리코스 자동차 경주 과제"
+                                    data-en="Racing car assignment from the Woowa Tech Course pre-course"
+                                    >Racing car assignment from the Woowa Tech Course pre-course</span
+                                ><span class="proj-lang">Java</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="year">
+                        <h3>2022</h3>
+                        <ul class="proj-list">
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >j...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="GitHub Pages로 운영하던 개인 사이트"
+                                    data-en="Personal site served from GitHub Pages"
+                                    >Personal site served from GitHub Pages</span
+                                ><span class="proj-lang">HTML</span>
+                            </li>
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >L...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="레츠코레일 ITX 자동 예매 스크립트"
+                                    data-en="Script that automates ITX booking on the Korail site"
+                                    >Script that automates ITX booking on the Korail site</span
+                                ><span class="proj-lang">Python</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="year">
+                        <h3>2019</h3>
+                        <ul class="proj-list">
+                            <li class="proj is-private">
+                                <span class="proj-name"
+                                    >v...<span class="sr" data-ko="비공개" data-en="Private">Private</span></span
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="끄투 오픈소스 기반 게임 서버"
+                                    data-en="A game server built on the open-source Kkutu project"
+                                    >A game server built on the open-source Kkutu project</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                            <li class="proj">
+                                <a
+                                    class="proj-name"
+                                    href="https://github.com/jeonjw85/OpenRoom"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >OpenRoom</a
+                                ><span
+                                    class="proj-desc"
+                                    data-ko="방을 만들어 대화하는 Socket.io 기반 채팅 서버와 웹 클라이언트"
+                                    data-en="Socket.io chat server with rooms, plus a web client"
+                                    >Socket.io chat server with rooms, plus a web client</span
+                                ><span class="proj-lang">JavaScript</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
 
-    const weather = { cloud: 0, rain: 0, snow: 0, storm: 0, rainStrength: 0, snowStrength: 0, wind: 0 };
-    const weatherTarget = { cloud: 0, rain: 0, snow: 0, rainStrength: 0, snowStrength: 0, wind: 0 };
+            <section id="archive" aria-labelledby="archive-h">
+                <div class="wrap">
+                    <div class="sec-head">
+                        <h2
+                            id="archive-h"
+                            data-ko="지난 프로젝트"
+                            data-en="Archive"
+                        >Archive</h2>
+                        <span>2013-2023</span>
+                    </div>
+                    <ul class="archive">
+                        <li>
+                            <span class="entry-when">2021-2023</span>
+                            <span class="entry-name" data-ko="알파" data-en="Alpha">Alpha</span>
+                            <span
+                                class="entry-desc"
+                                data-ko="스포츠 스트리밍 프로젝트. 운영 이슈로 종료"
+                                data-en="A sports streaming project. Shut down over operational issues"
+                                >A sports streaming project. Shut down over operational issues</span
+                            >
+                        </li>
+                        <li>
+                            <span class="entry-when">2017.04-2019.01</span>
+                            <span class="entry-name" data-ko="기능봇" data-en="Function bot">Function bot</span>
+                            <span
+                                class="entry-desc"
+                                data-ko="카카오톡 사설 유틸 챗봇"
+                                data-en="A private KakaoTalk utility chatbot"
+                                >A private KakaoTalk utility chatbot</span
+                            >
+                        </li>
+                        <li>
+                            <span class="entry-when">2017-2019</span>
+                            <span class="entry-name" data-ko="끄투 프리서버" data-en="Kkutu private server">Kkutu private server</span>
+                            <span
+                                class="entry-desc"
+                                data-ko="끄투 오픈소스 기반 프리서버"
+                                data-en="A private server built on the open-source Kkutu game"
+                                >A private server built on the open-source Kkutu game</span
+                            >
+                        </li>
+                        <li>
+                            <span class="entry-when">2015?-2016?</span>
+                            <span class="entry-name" data-ko="MCPC서버" data-en="MCPC server">MCPC server</span>
+                            <span
+                                class="entry-desc"
+                                data-ko="마인크래프트 PC 반야생 서버"
+                                data-en="A semi-vanilla Minecraft Java server"
+                                >A semi-vanilla Minecraft Java server</span
+                            >
+                        </li>
+                        <li>
+                            <span class="entry-when">2013?-2014?</span>
+                            <span class="entry-name" data-ko="MCPE서버" data-en="MCPE server">MCPE server</span>
+                            <span
+                                class="entry-desc"
+                                data-ko="마인크래프트 PE 야생 서버"
+                                data-en="A Minecraft Pocket Edition survival server"
+                                >A Minecraft Pocket Edition survival server</span
+                            >
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </main>
 
-    function kstDate() {
-      return new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
-    }
+        <footer id="contact">
+            <div class="wrap">
+                <span>jjw@jjw.kr</span>
+                <span>
+                    <a
+                        href="https://github.com/jeonjw85"
+                        target="_blank"
+                        rel="noopener"
+                        >GitHub</a
+                    >
+                    <a href="/policy" data-ko="개인정보" data-en="Privacy"
+                        >Privacy</a
+                    >
+                    <a href="/terms" data-ko="약관" data-en="Terms">Terms</a>
+                </span>
+            </div>
+        </footer>
 
-    const sunTimes = { sunrise: 6, sunset: 19.5 };
+        <script>
+            (function () {
+                var root = document.documentElement;
+                var btn = document.getElementById("lang");
 
-    const toHour = (s) => {
-      const [h, m] = s.slice(11, 16).split(':').map(Number);
-      return h + m / 60;
-    };
+                function apply(lang) {
+                    root.lang = lang;
+                    document
+                        .querySelectorAll("[data-ko][data-en]")
+                        .forEach(function (el) {
+                            el.textContent = el.getAttribute("data-" + lang);
+                        });
+                    var isEn = lang === "en";
+                    var nav = document.getElementById("main-nav");
+                    if (nav) {
+                        nav.setAttribute("aria-label", isEn ? "Main" : "주요");
+                    }
+                    btn.setAttribute("aria-pressed", String(!isEn));
+                    btn.setAttribute(
+                        "aria-label",
+                        isEn
+                            ? "KO / EN, 한국어로 전환"
+                            : "KO / EN, Switch to English",
+                    );
+                    btn.textContent = isEn ? "EN" : "KO";
+                }
 
-    const SUN_URL = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&daily=sunrise,sunset&timezone=Asia%2FSeoul&forecast_days=1';
-    async function fetchSunTimes(pre) {
-      try {
-        const { daily } = pre ?? await (await fetch(SUN_URL)).json();
-        sunTimes.sunrise = toHour(daily.sunrise[0]);
-        sunTimes.sunset = toHour(daily.sunset[0]);
-      } catch {}
-    }
-    fetchSunTimes(window.__pre.sun);
-    setInterval(fetchSunTimes, 3600000);
+                apply("en");
 
-    function skyState() {
-      const d = kstDate();
-      const h = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
-      const { sunrise, sunset } = sunTimes;
-      const f = (h - sunrise) / (sunset - sunrise);
-      return {
-        elevation: Math.sin(Math.PI * f) * 62,
-        azimuth: 90 + f * 180,
-      };
-    }
-
-    // const clockEl = document.getElementById('clock');
-    // const weatherEl = document.getElementById('weather');
-    // function tickClock() {
-    //   const d = kstDate();
-    //   const p = (n) => String(n).padStart(2, '0');
-    //   clockEl.textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} KST`;
-    // }
-    // tickClock();
-    // setInterval(tickClock, 1000);
-
-    // const WEATHER_LABELS = {
-    //   0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-    //   45: 'Fog', 48: 'Fog',
-    //   51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle', 56: 'Drizzle', 57: 'Drizzle',
-    //   61: 'Rain', 63: 'Rain', 65: 'Rain', 66: 'Rain', 67: 'Rain',
-    //   71: 'Snow', 73: 'Snow', 75: 'Snow', 77: 'Snow',
-    //   80: 'Rain showers', 81: 'Rain showers', 82: 'Rain showers',
-    //   85: 'Snow showers', 86: 'Snow showers',
-    //   95: 'Thunderstorm', 96: 'Thunderstorm', 99: 'Thunderstorm',
-    // };
-
-    const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=weather_code,cloud_cover,temperature_2m,precipitation,wind_speed_10m,wind_direction_10m';
-    let wxPrimed = false;
-    function applyWeather(current) {
-      const code = current.weather_code;
-      const precip = current.precipitation ?? 0;
-      const windSpeed = current.wind_speed_10m ?? 0;
-      const windDir = current.wind_direction_10m ?? 0;
-      const windX = Math.sin(THREE.MathUtils.degToRad(windDir + 180)) * THREE.MathUtils.clamp(windSpeed / 40, 0, 1);
-      weatherTarget.cloud = Math.max(current.cloud_cover / 100, code === 3 ? 0.9 : code <= 1 ? 0.1 : 0);
-      weatherTarget.rain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95 ? 1 : 0;
-      weatherTarget.snow = (code >= 71 && code <= 77) || code === 85 || code === 86 ? 1 : 0;
-      weatherTarget.rainStrength = weatherTarget.rain ? THREE.MathUtils.clamp(0.5 + precip * 0.4, 0.5, 1.6) : 0;
-      weatherTarget.snowStrength = weatherTarget.snow ? THREE.MathUtils.clamp(0.6 + precip * 0.8, 0.6, 1.6) : 0;
-      weatherTarget.wind = windX;
-      weather.storm = code >= 95 ? 1 : 0;
-      if (code === 45 || code === 48) weatherTarget.cloud = Math.max(weatherTarget.cloud, 0.7);
-      const label = WEATHER_LABELS[code] ?? '';
-      weatherEl.textContent = `Seoul ${Math.round(current.temperature_2m)}°C ${label}`;
-    }
-    async function fetchWeather(pre) {
-      try {
-        const { current } = pre ?? await (await fetch(WX_URL)).json();
-        applyWeather(current);
-        try { localStorage.setItem('wx', JSON.stringify({ t: Date.now(), current })); } catch {}
-        if (!wxPrimed) { Object.assign(weather, weatherTarget); wxPrimed = true; }
-      } catch {
-        weatherEl.textContent = 'Seoul';
-      }
-    }
-    try {
-      const cached = JSON.parse(localStorage.getItem('wx'));
-      if (cached?.current && typeof cached.current.weather_code === 'number' && Date.now() - cached.t < 3600000) {
-        applyWeather(cached.current);
-        Object.assign(weather, weatherTarget);
-        wxPrimed = true;
-      }
-    } catch {}
-    fetchWeather(window.__pre.wx);
-    setInterval(fetchWeather, 600000);
-
-    let mx = 0, my = 0;
-    addEventListener('pointermove', (e) => {
-      mx = (e.clientX / innerWidth - 0.5) * 2;
-      my = (e.clientY / innerHeight - 0.5) * 2;
-    });
-
-    function resize() {
-      renderer.setSize(innerWidth, innerHeight);
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-    }
-    addEventListener('resize', resize);
-    resize();
-
-    const clock = new THREE.Clock();
-    const look = new THREE.Vector3();
-    let flash = 0;
-    renderer.setAnimationLoop(() => {
-      const t = clock.getElapsedTime();
-
-      weather.cloud += (weatherTarget.cloud - weather.cloud) * 0.01;
-      weather.rain += (weatherTarget.rain - weather.rain) * 0.02;
-      weather.snow += (weatherTarget.snow - weather.snow) * 0.02;
-      weather.rainStrength += (weatherTarget.rainStrength - weather.rainStrength) * 0.02;
-      weather.snowStrength += (weatherTarget.snowStrength - weather.snowStrength) * 0.02;
-      weather.wind += (weatherTarget.wind - weather.wind) * 0.01;
-
-      const { elevation, azimuth } = skyState();
-      const day = THREE.MathUtils.clamp(elevation / 25, 0, 1);
-      const dusk = THREE.MathUtils.clamp(1 - Math.abs(elevation) / 12, 0, 1)
-        * THREE.MathUtils.clamp((elevation + 4) / 4, 0, 1);
-      const night = THREE.MathUtils.clamp(-elevation / 10, 0, 1);
-      document.body.classList.toggle('bright-sky', Math.max(day, dusk * 0.7) > 0.5);
-      const cloud = weather.cloud;
-
-      const phi = THREE.MathUtils.degToRad(90 - elevation);
-      const theta = THREE.MathUtils.degToRad(azimuth);
-      sun.setFromSphericalCoords(1, phi, theta);
-      skyU['sunPosition'].value.copy(sun);
-      skyU['turbidity'].value = THREE.MathUtils.lerp(10, 3, day) + dusk * 6 + cloud * 7;
-      skyU['rayleigh'].value = (THREE.MathUtils.lerp(3, 1.1, day) + dusk * 2.5) * (1 - cloud * 0.25);
-      skyU['mieCoefficient'].value = THREE.MathUtils.lerp(0.02, 0.004, day) + dusk * 0.01 + cloud * 0.01;
-
-      if (weather.storm && Math.random() < 0.007) flash = 1;
-
-      cloudMat.uniforms.uTime.value = t;
-      cloudMat.uniforms.uCloud.value = cloud;
-      cloudMat.uniforms.uWind.value = Math.abs(weather.wind);
-      const wet = Math.max(weather.rain * (0.55 + 0.3 * weather.rainStrength), weather.storm * 0.9);
-      cloudMat.uniforms.uDusk.value = dusk;
-      cloudMat.uniforms.uColor.value.copy(cloudNight)
-        .lerp(cloudDay, Math.max(day, dusk * 0.9) * (1 - wet * 0.5))
-        .lerp(cloudDusk, dusk * 0.55)
-        .lerp(cloudGray, cloud * 0.5 * Math.min(1, day + dusk * 0.5) * (1 - dusk * 0.6))
-        .lerp(cloudStorm, wet * Math.min(1, day * 1.2 + dusk * 0.5 + 0.15))
-        .multiplyScalar(1 + flash * 3);
-      cloudMat.uniforms.uOpacity.value = (0.25 + cloud * 0.75) * (1 - night * 0.55);
-      const cl = Math.hypot(sun.x, sun.z) || 1;
-      clouds.position.set((sun.x / cl) * 3500, 260, (sun.z / cl) * 3500);
-      clouds.lookAt(camera.position.x, 260, camera.position.z);
-      glowMat.uniforms.uDusk.value = dusk * (1 - cloud * 0.35);
-      glow.position.set((sun.x / cl) * 3800, 260, (sun.z / cl) * 3800);
-      glow.lookAt(camera.position.x, 260, camera.position.z);
-      cloudMat.uniforms.uSunUvY.value = 0.5 + (Math.tan(THREE.MathUtils.degToRad(THREE.MathUtils.clamp(elevation, -3, 60))) * 3500 - 242) / 3000;
-      cloudMat.uniforms.uSunGlow.value =
-        THREE.MathUtils.clamp(1 - Math.max(elevation, 0) / 16, 0, 1)
-        * THREE.MathUtils.clamp((elevation + 2) / 4, 0, 1)
-        * (1 - cloud * 0.55);
-
-      starMat.uniforms.uOpacity.value = night * 0.9 * (1 - cloud);
-      starMat.uniforms.uTime.value = t;
-      stars.rotation.y = t * 0.004;
-
-      rainMat.uniforms.uTime.value = t;
-      rainMat.uniforms.uOpacity.value = weather.rain * (0.25 + 0.3 * weather.rainStrength);
-      rainMat.uniforms.uWind.value = weather.wind * 0.5;
-      rainMat.uniforms.uSpeed.value = 0.8 + weather.rainStrength * 0.5;
-      snowMat.uniforms.uTime.value = t;
-      snowMat.uniforms.uOpacity.value = weather.snow * (0.4 + 0.45 * weather.snowStrength);
-      snowMat.uniforms.uWind.value = weather.wind;
-
-      renderer.toneMappingExposure =
-        (0.18 + 0.4 * Math.max(day, dusk * 0.9) + dusk * 0.08) * (1 - cloud * 0.22) * (1 - wet * 0.28) + flash * 0.7;
-      flash *= 0.88;
-
-      look.set(sun.x * 300, 24, sun.z * 300);
-      camera.position.x += (Math.sin(t * 0.05) * 20 + mx * 8 - camera.position.x) * 0.02;
-      camera.position.y += (18 - my * 4 - camera.position.y) * 0.02;
-      camera.lookAt(look);
-      renderer.render(scene, camera);
-    });
-  </script>
-</body>
+                btn.addEventListener("click", function () {
+                    apply(root.lang === "en" ? "ko" : "en");
+                });
+            })();
+        </script>
+    </body>
 </html>
